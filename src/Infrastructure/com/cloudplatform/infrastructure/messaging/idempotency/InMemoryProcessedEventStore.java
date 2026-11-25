@@ -1,4 +1,4 @@
-﻿package com.cloudplatform.infrastructure.messaging.idempotency;
+package com.cloudplatform.infrastructure.messaging.idempotency;
 
 import java.util.HashSet;
 import java.util.Set;

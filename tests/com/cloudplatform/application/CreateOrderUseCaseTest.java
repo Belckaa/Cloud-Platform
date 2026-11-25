@@ -1,4 +1,4 @@
-﻿package com.cloudplatform.application;
+package com.cloudplatform.application;
 
 import com.cloudplatform.application.port.IEventPublisher;
 import com.cloudplatform.application.port.InventoryAvailabilityPort;

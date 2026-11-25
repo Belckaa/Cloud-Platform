@@ -1,4 +1,4 @@
-﻿package com.cloudplatform.infrastructure.messaging.consumer;
+package com.cloudplatform.infrastructure.messaging.consumer;
 
 import com.cloudplatform.events.OrderCreatedEvent;
 import com.cloudplatform.infrastructure.messaging.idempotency.InMemoryProcessedEventStore;

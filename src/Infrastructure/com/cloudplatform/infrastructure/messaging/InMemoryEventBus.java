@@ -1,4 +1,4 @@
-﻿package com.cloudplatform.infrastructure.messaging;
+package com.cloudplatform.infrastructure.messaging;
 
 import com.cloudplatform.application.port.IEventPublisher;
 

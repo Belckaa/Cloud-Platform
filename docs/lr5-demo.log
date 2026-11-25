@@ -1,0 +1,80 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------< com.cloudplatform:ecommerce-clean-architecture >-----------
+[INFO] Building E-Commerce Cloud Platform - Clean Architecture Core 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] Loaded 24631 auto-discovered prefixes for remote repository central (prefixes-central.txt)
+[INFO] 
+[INFO] --- clean:3.5.0:clean (default-clean) @ ecommerce-clean-architecture ---
+[INFO] Deleting C:\Users\donna\Desktop\IPZ\target
+[INFO] 
+[INFO] --- resources:3.5.0:resources (default-resources) @ ecommerce-clean-architecture ---
+[INFO] skip non existing resourceDirectory C:\Users\donna\Desktop\IPZ\src\main\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ ecommerce-clean-architecture ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 21 source files with javac [debug release 21] to target\classes
+[INFO] 
+[INFO] --- resources:3.5.0:testResources (default-testResources) @ ecommerce-clean-architecture ---
+[INFO] skip non existing resourceDirectory C:\Users\donna\Desktop\IPZ\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ ecommerce-clean-architecture ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 3 source files with javac [debug release 21] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.5.2:test (default-test) @ ecommerce-clean-architecture ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+SLF4J(W): No SLF4J providers were found.
+SLF4J(W): Defaulting to no-operation (NOP) logger implementation
+SLF4J(W): See https://www.slf4j.org/codes.html#noProviders for further details.
+[INFO] Running com.cloudplatform.application.CreateOrderUseCaseTest
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html#0.3
+WARNING: A Java agent has been loaded dynamically (C:\Users\donna\.m2\repository\net\bytebuddy\byte-buddy-agent\1.15.11\byte-buddy-agent-1.15.11.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.876 s -- in com.cloudplatform.application.CreateOrderUseCaseTest
+[INFO] Running com.cloudplatform.messaging.EventDrivenArchitectureTest
+[BUS] SUBSCRIBED: PaymentProcessedEvent
+[BUS] PUBLISHED: PaymentProcessedEvent, subscribers=1
+[PAYMENT AUDIT] Payment processed: payment=7f061edc-f9e9-4f85-a61f-4609b9a9a098, order=855d758e-88b2-4e36-8aad-5e4ed62e6ff9, amount=300.00
+[IDEMPOTENCY] MARKED PROCESSED: consumer=PaymentAuditConsumer, eventId=6c4c0fb6-316c-46a9-9f48-2c42dffb08eb
+[BUS] SUBSCRIBED: OrderCreatedEvent
+[BUS] SUBSCRIBED: OrderCreatedEvent
+[BUS] SUBSCRIBED: OrderCreatedEvent
+[DEMO] Publishing the same event twice: 6c8cd7ef-decc-4764-b150-5513436cc811
+[BUS] PUBLISHED: OrderCreatedEvent, subscribers=3
+[BUS] PUBLISHED: OrderCreatedEvent, subscribers=3
+[BUS] CONSUMER FAILURE: IllegalStateException - Simulated consumer failure
+[STOCK] Reservation processed for order=ff29395c-307f-4f49-9df4-9af94f723c60, items=2
+[IDEMPOTENCY] MARKED PROCESSED: consumer=StockReservationConsumer, eventId=6c8cd7ef-decc-4764-b150-5513436cc811
+[BUS] CONSUMER FAILURE: IllegalStateException - Simulated consumer failure
+[NOTIFICATION] Order created notification sent: order=ff29395c-307f-4f49-9df4-9af94f723c60, customer=5a10d6ca-983e-40df-8986-94173fb11b8d
+[IDEMPOTENCY] MARKED PROCESSED: consumer=OrderNotificationConsumer, eventId=6c8cd7ef-decc-4764-b150-5513436cc811
+[IDEMPOTENCY] DUPLICATE SKIPPED: consumer=OrderNotificationConsumer, eventId=6c8cd7ef-decc-4764-b150-5513436cc811
+[IDEMPOTENCY] DUPLICATE SKIPPED: consumer=StockReservationConsumer, eventId=6c8cd7ef-decc-4764-b150-5513436cc811
+[DEMO] Duplicate delivery verified.
+[DEMO] Stock reservations: 1
+[DEMO] Notifications: 1
+[DEMO] Failed consumer attempts: 2
+[DEMO] Healthy consumers completed despite failure.
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.032 s -- in com.cloudplatform.messaging.EventDrivenArchitectureTest
+[INFO] Running com.cloudplatform.architecture.LayerDependencyTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.942 s -- in com.cloudplatform.architecture.LayerDependencyTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.512 s
+[INFO] Finished at: 2026-11-25T20:01:25+02:00
+[INFO] ------------------------------------------------------------------------

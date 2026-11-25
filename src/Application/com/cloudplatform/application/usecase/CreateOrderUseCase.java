@@ -1,4 +1,4 @@
-﻿package com.cloudplatform.application.usecase;
+package com.cloudplatform.application.usecase;
 
 import com.cloudplatform.application.port.IEventPublisher;
 import com.cloudplatform.application.port.InventoryAvailabilityPort;

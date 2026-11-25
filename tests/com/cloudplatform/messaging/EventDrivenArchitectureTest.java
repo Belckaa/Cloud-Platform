@@ -1,4 +1,4 @@
-﻿package com.cloudplatform.messaging;
+package com.cloudplatform.messaging;
 
 import com.cloudplatform.events.OrderCreatedEvent;
 import com.cloudplatform.events.PaymentProcessedEvent;

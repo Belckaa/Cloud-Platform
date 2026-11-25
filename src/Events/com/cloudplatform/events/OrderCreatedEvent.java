@@ -1,4 +1,4 @@
-﻿package com.cloudplatform.events;
+package com.cloudplatform.events;
 
 import java.math.BigDecimal;
 import java.time.Instant;

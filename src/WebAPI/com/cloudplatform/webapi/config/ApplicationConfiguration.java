@@ -1,4 +1,4 @@
-﻿package com.cloudplatform.webapi.config;
+package com.cloudplatform.webapi.config;
 
 import com.cloudplatform.application.port.IEventPublisher;
 import com.cloudplatform.application.port.InventoryAvailabilityPort;
