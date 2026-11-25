@@ -1,133 +1,61 @@
-@startuml 04_domain_class_diagram
-title UML Domain Class Diagram - E-Commerce Marketplace
+﻿@startuml 04_domain_class_diagram
+title UML Domain Class Diagram - Implemented Order Domain
 skinparam classAttributeIconSize 0
 hide empty members
 
-class Customer {
-  -id: UUID
-  -email: String
-  -fullName: String
-  -phone: String
-  +updateProfile(name: String, phone: String): void
-  +getOrders(): List<Order>
-}
-
-class Product {
-  -id: UUID
-  -sku: String
-  -name: String
-  -description: String
-  -price: BigDecimal
-  -availableQuantity: Integer
-  +changePrice(price: BigDecimal): void
-  +isAvailable(quantity: Integer): Boolean
-  +reserve(quantity: Integer): Boolean
-}
-
-class Cart {
-  -id: UUID
-  -createdAt: Instant
-  -updatedAt: Instant
-  +addItem(product: Product, quantity: Integer): void
-  +removeItem(productId: UUID): void
-  +calculateTotal(): BigDecimal
-  +clear(): void
-}
-
-class CartItem {
-  -id: UUID
-  -quantity: Integer
-  -unitPrice: BigDecimal
-  +changeQuantity(quantity: Integer): void
-  +calculateSubtotal(): BigDecimal
-}
-
 class Order {
   -id: UUID
-  -number: String
-  -status: OrderStatus
+  -customerId: UUID
+  -items: List<OrderItem>
+  -shippingAddress: Address
   -totalAmount: BigDecimal
+  -status: OrderStatus
   -createdAt: Instant
-  +place(): void
-  +confirm(): void
-  +cancel(reason: String): void
-  +markAsShipped(): void
-  +complete(): void
+  +create(customerId, items, shippingAddress): Order
+  +getId(): UUID
+  +getCustomerId(): UUID
+  +getItems(): List<OrderItem>
+  +getTotalAmount(): BigDecimal
+  +getStatus(): OrderStatus
+  +getCreatedAt(): Instant
 }
 
 class OrderItem {
-  -id: UUID
   -productId: UUID
-  -productName: String
-  -quantity: Integer
+  -quantity: int
   -unitPrice: BigDecimal
-  +calculateSubtotal(): BigDecimal
+  +subtotal(): BigDecimal
 }
 
-class Payment {
-  -id: UUID
-  -amount: BigDecimal
-  -status: PaymentStatus
-  -transactionReference: String
-  -createdAt: Instant
-  +authorize(): Boolean
-  +capture(): Boolean
-  +refund(): Boolean
-}
-
-class Shipment {
-  -id: UUID
-  -trackingNumber: String
-  -status: ShipmentStatus
-  -carrier: String
-  -shippedAt: Instant
-  +create(): void
-  +updateTracking(status: ShipmentStatus): void
-  +markDelivered(): void
+class Address {
+  -country: String
+  -city: String
+  -street: String
+  -building: String
+  -postalCode: String
 }
 
 enum OrderStatus {
-  CREATED
-  PENDING_PAYMENT
+  PENDING
   CONFIRMED
   PROCESSING
   SHIPPED
   DELIVERED
   CANCELLED
-  REFUNDED
 }
 
-enum PaymentStatus {
-  PENDING
-  AUTHORIZED
-  CAPTURED
-  FAILED
-  REFUNDED
+interface OrderRepository {
+  +save(order: Order): Order
 }
 
-enum ShipmentStatus {
-  CREATED
-  IN_TRANSIT
-  DELIVERED
-  FAILED
-}
-
-Customer "1" -- "0..1" Cart : owns
-Customer "1" -- "0..*" Order : places
-Cart "1" *-- "0..*" CartItem : composition
-CartItem "0..*" --> "1" Product : references
-Order "1" *-- "1..*" OrderItem : composition
-OrderItem "0..*" --> "1" Product : references
-Order "1" *-- "0..1" Payment : composition
-Order "1" *-- "0..1" Shipment : composition
+Order "1" *-- "1..*" OrderItem
+Order "1" *-- "1" Address
 Order --> OrderStatus
-Payment --> PaymentStatus
-Shipment --> ShipmentStatus
+OrderRepository ..> Order : persists
 
 note bottom
-Composition is used where the child object's lifecycle
-is owned by its parent aggregate. Product is referenced
-by cart and order items; it is not owned by them.
-OrderItem stores product name and unit price snapshots.
+The diagram contains domain types present in the
+current source code. It does not model future
+Customer, Product, Cart, Payment or Shipment aggregates.
 end note
 @enduml

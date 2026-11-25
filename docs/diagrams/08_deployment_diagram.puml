@@ -1,0 +1,64 @@
+﻿@startuml 08_deployment_diagram
+title UML Deployment Diagram - Cloud Platform API (As-Is)
+skinparam componentStyle uml
+skinparam shadowing false
+
+node "Development Host\nWindows" as host {
+    node "Docker Engine" as docker {
+        node "Container: cloud-platform-api" as container {
+            artifact "app.jar\n(ecommerce-clean-architecture-1.0.0.jar)" as jar
+
+            node "Java 21 JRE / JVM" as jvm {
+                node "Embedded Tomcat\nHTTP :8080" as tomcat {
+                    component "Spring Boot Application\ncloud-platform-api" as app
+                    component "REST Controller\nPOST /orders" as rest
+                    component "CreateOrderUseCase" as usecase
+                    component "Domain Model\nOrder, OrderItem, Address" as domain
+                    component "InMemoryOrderRepository" as repo
+                    component "InMemoryInventoryAvailabilityAdapter" as inventory
+                    component "InMemoryEventBus" as eventbus
+                    component "Event Consumers\nStockReservationConsumer\nOrderNotificationConsumer\nPaymentAuditConsumer" as consumers
+                }
+            }
+        }
+    }
+}
+
+cloud "HTTP Client" as client
+
+client --> host : HTTP :8081
+host --> docker : Published port\n8081:8080
+docker --> container : Container networking
+jar ..> jvm : Executed by JVM
+jvm --> tomcat : Hosts embedded server
+tomcat --> app : Dispatches requests
+app --> rest
+rest --> usecase
+usecase --> domain
+usecase --> repo : save()
+usecase --> inventory : isAvailable()
+usecase --> eventbus : publish()
+eventbus --> consumers : In-process event dispatch
+
+note right of container
+Docker Compose service:
+cloud-platform-api
+
+Container port: 8080
+Published host port: 8081
+Restart policy: unless-stopped
+end note
+
+note bottom of repo
+In-memory storage:
+data is not durable and is lost
+when the application process restarts.
+end note
+
+note bottom of consumers
+Consumers execute inside the
+same application process.
+There is no external message broker.
+end note
+
+@enduml

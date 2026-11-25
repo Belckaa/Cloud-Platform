@@ -1,23 +1,27 @@
-@startuml 01_system_context
+﻿@startuml 01_system_context
 !includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
-title C4 Level 1 - System Context
+title C4 Level 1 - System Context (As-Is)
 LAYOUT_WITH_LEGEND()
 
-Person(customer, "Customer", "Browses products, manages cart and places orders")
-Person(admin, "Administrator", "Manages catalog, orders and marketplace operations")
+Person(customer, "Customer", "Submits an order with customer, item and shipping data")
 
-System(platform, "E-Commerce Cloud Platform", "High-load marketplace for product discovery, shopping, order processing and delivery coordination")
+System(platform, "E-Commerce Cloud Platform", "Implemented order creation module exposed through a REST API")
 
-System_Ext(keycloak, "Keycloak Identity Provider", "Authentication and identity management")
-System_Ext(payment, "External Payment Gateway", "Processes card and online payments")
-System_Ext(delivery, "External Delivery Provider", "Shipment creation and delivery tracking")
+Rel(customer, platform, "Creates an order", "HTTP/JSON")
 
-Rel(customer, platform, "Browses products, manages cart, places orders", "HTTPS")
-Rel(admin, platform, "Manages catalog and orders", "HTTPS")
-Rel(platform, keycloak, "Authenticates users and validates tokens", "OIDC / OAuth 2.0 over HTTPS")
-Rel(platform, payment, "Creates and verifies payments", "HTTPS/JSON")
-Rel(platform, delivery, "Creates shipments and receives tracking updates", "HTTPS/JSON")
+note right of platform
+Current implemented scope:
+- POST /orders
+- Order creation and validation
+- Inventory availability check
+- In-memory order repository
+- In-process event publication
+
+External identity, payment, delivery,
+database and broker integrations
+are not part of the running deployment.
+end note
 
 SHOW_LEGEND()
 @enduml

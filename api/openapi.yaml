@@ -2,178 +2,63 @@
 info:
   title: E-Commerce Cloud Platform API
   version: 1.0.0
-  description: REST API для керування замовленнями маркетплейсу.
+  description: REST API поточної реалізації модуля створення замовлень.
 servers:
-  - url: http://localhost:4010
-    description: Prism mock server
+  - url: http://localhost:8081
+    description: Локальний Docker deployment (host port 8081 -> container port 8080)
 tags:
   - name: Orders
-    description: Операції із замовленнями
+    description: Операції зі створення замовлень
 paths:
   /orders:
-    get:
-      tags: [Orders]
-      summary: Отримати список замовлень
-      operationId: listOrders
-      description: "Повертає сторінку замовлень із можливістю фільтрації за статусом і клієнтом."
-      parameters:
-        - name: status
-          in: query
-          required: false
-          schema:
-            $ref: '#/components/schemas/OrderStatus'
-        - name: customerId
-          in: query
-          required: false
-          schema:
-            type: string
-            format: uuid
-        - name: limit
-          in: query
-          required: false
-          description: Максимальна кількість елементів на сторінці
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-            example: 20
-        - name: cursor
-          in: query
-          required: false
-          description: Курсор наступної сторінки
-          schema:
-            type: string
-            maxLength: 512
-            example: eyJpZCI6MTAwfQ==
-      responses:
-        '200':
-          description: Сторінку замовлень отримано
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderPage'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
     post:
-      tags: [Orders]
+      security: []
+      tags:
+        - Orders
       summary: Створити замовлення
       operationId: createOrder
-      description: "Створює нове замовлення після перевірки вхідних даних."
+      description: Створює замовлення після перевірки доступності товарів.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateOrderRequest'
-            examples:
-              validOrder:
-                summary: Приклад коректного замовлення
-                value:
-                  customerId: 550e8400-e29b-41d4-a716-446655440000
-                  items:
-                    - productId: 550e8400-e29b-41d4-a716-446655440001
-                      quantity: 2
-                      unitPrice: 1250.50
-                  shippingAddress:
-                    country: Ukraine
-                    city: Kherson
-                    street: Soborna
-                    building: "10"
-                    postalCode: "73000"
+            example:
+              customerId: 11111111-1111-4111-8111-111111111111
+              items:
+                - productId: 22222222-2222-4222-8222-222222222222
+                  quantity: 2
+                  unitPrice: 49.90
+              shippingAddress:
+                country: Latvia
+                city: Riga
+                street: Brivibas iela
+                building: "10"
+                postalCode: LV-1010
       responses:
+        '400':
+          description: Некоректний формат або вміст запиту.
         '201':
-          description: Замовлення створено
+          description: Замовлення успішно створено.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Order'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-  /orders/{orderId}:
-    parameters:
-      - name: orderId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      tags: [Orders]
-      summary: Отримати замовлення за ідентифікатором
-      operationId: getOrder
-      description: "Повертає детальну інформацію про замовлення за його ідентифікатором."
-      responses:
-        '200':
-          description: Замовлення знайдено
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Order'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-    put:
-      tags: [Orders]
-      summary: Оновити замовлення
-      operationId: updateOrder
-      description: "Оновлює адресу доставки та коментар до замовлення."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateOrderRequest'
-      responses:
-        '200':
-          description: Замовлення оновлено
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Order'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-    delete:
-      tags: [Orders]
-      summary: Скасувати замовлення
-      operationId: cancelOrder
-      description: "Скасовує замовлення за його ідентифікатором."
-      responses:
-        '204':
-          description: Замовлення скасовано
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+                $ref: '#/components/schemas/CreateOrderResponse'
+              example:
+                id: 046d5fc9-6928-426d-8b63-27872907a27a
+                customerId: 11111111-1111-4111-8111-111111111111
+                status: PENDING
+                totalAmount: 99.80
+                createdAt: '2026-11-25T18:34:14.325641811Z'
 components:
   schemas:
-    OrderStatus:
-      type: string
-      enum: [PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED]
-      example: PENDING
     CreateOrderRequest:
       type: object
-      additionalProperties: false
-      required: [customerId, items, shippingAddress]
+      required:
+        - customerId
+        - items
+        - shippingAddress
       properties:
         customerId:
           type: string
@@ -181,29 +66,16 @@ components:
         items:
           type: array
           minItems: 1
-          maxItems: 100
           items:
-            $ref: '#/components/schemas/OrderItemInput'
+            $ref: '#/components/schemas/OrderItemRequest'
         shippingAddress:
           $ref: '#/components/schemas/Address'
-        customerComment:
-          type: string
-          maxLength: 500
-          example: Доставити після 18:00
-    UpdateOrderRequest:
+    OrderItemRequest:
       type: object
-      additionalProperties: false
-      required: [shippingAddress]
-      properties:
-        shippingAddress:
-          $ref: '#/components/schemas/Address'
-        customerComment:
-          type: string
-          maxLength: 500
-    OrderItemInput:
-      type: object
-      additionalProperties: false
-      required: [productId, quantity, unitPrice]
+      required:
+        - productId
+        - quantity
+        - unitPrice
       properties:
         productId:
           type: string
@@ -211,42 +83,38 @@ components:
         quantity:
           type: integer
           minimum: 1
-          maximum: 1000
-          example: 2
         unitPrice:
           type: number
           format: double
-          minimum: 0.01
-          maximum: 10000000
-          example: 1250.50
+          minimum: 0
+          exclusiveMinimum: true
     Address:
       type: object
-      additionalProperties: false
-      required: [country, city, street, building, postalCode]
+      required:
+        - country
+        - city
+        - street
+        - building
+        - postalCode
       properties:
         country:
           type: string
-          minLength: 2
-          maxLength: 80
         city:
           type: string
-          minLength: 2
-          maxLength: 100
         street:
           type: string
-          minLength: 2
-          maxLength: 150
         building:
           type: string
-          minLength: 1
-          maxLength: 20
         postalCode:
           type: string
-          minLength: 3
-          maxLength: 12
-    Order:
+    CreateOrderResponse:
       type: object
-      required: [id, customerId, status, items, totalAmount, createdAt]
+      required:
+        - id
+        - customerId
+        - status
+        - totalAmount
+        - createdAt
       properties:
         id:
           type: string
@@ -255,129 +123,11 @@ components:
           type: string
           format: uuid
         status:
-          $ref: '#/components/schemas/OrderStatus'
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/OrderItem'
-        shippingAddress:
-          $ref: '#/components/schemas/Address'
+          type: string
+          example: PENDING
         totalAmount:
           type: number
           format: double
-          minimum: 0
         createdAt:
           type: string
           format: date-time
-    OrderItem:
-      allOf:
-        - $ref: '#/components/schemas/OrderItemInput'
-        - type: object
-          required: [title]
-          properties:
-            title:
-              type: string
-              minLength: 1
-              maxLength: 200
-    PaginationMetadata:
-      type: object
-      required: [limit, hasNext]
-      properties:
-        limit:
-          type: integer
-          minimum: 1
-          maximum: 100
-        nextCursor:
-          type: string
-          nullable: true
-        hasNext:
-          type: boolean
-    OrderPage:
-      type: object
-      required: [items, pagination]
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Order'
-        pagination:
-          $ref: '#/components/schemas/PaginationMetadata'
-    Problem:
-      type: object
-      description: RFC 7807 Problem Details
-      required: [type, title, status]
-      properties:
-        type:
-          type: string
-          format: uri
-          example: https://api.example.com/problems/validation-error
-        title:
-          type: string
-          example: Validation failed
-        status:
-          type: integer
-          minimum: 400
-          maximum: 599
-          example: 422
-        detail:
-          type: string
-          example: Поле quantity повинно бути більшим за нуль
-        instance:
-          type: string
-          format: uri
-        errors:
-          type: array
-          items:
-            type: object
-            required: [field, message]
-            properties:
-              field:
-                type: string
-              message:
-                type: string
-  responses:
-    BadRequest:
-      description: Некоректний запит
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            type: https://api.example.com/problems/bad-request
-            title: Bad Request
-            status: 400
-            detail: Перевірте параметри запиту
-    Unauthorized:
-      description: Необхідна автентифікація
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            type: https://api.example.com/problems/unauthorized
-            title: Unauthorized
-            status: 401
-            detail: Потрібна автентифікація
-    NotFound:
-      description: Ресурс не знайдено
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            type: https://api.example.com/problems/not-found
-            title: Not Found
-            status: 404
-            detail: Замовлення не знайдено
-    UnprocessableEntity:
-      description: Помилка семантичної валідації
-      content:
-        application/problem+json:
-          schema:
-            $ref: '#/components/schemas/Problem'
-          example:
-            type: https://api.example.com/problems/validation-error
-            title: Unprocessable Entity
-            status: 422
-            detail: Дані замовлення не пройшли перевірку
-

@@ -1,59 +1,63 @@
-@startuml 03_backend_components
-title UML Component Diagram - Backend Order Module
+﻿@startuml 03_backend_components
+title UML Component Diagram - Implemented Order Module
 skinparam componentStyle uml
 skinparam linetype ortho
 
-package "Backend Application - Order Module" {
-    component "Order REST Controller" as Controller
-    component "Place Order Use Case" as PlaceOrder
-    component "Order Query Use Case" as QueryOrder
-    component "Order Domain Service" as DomainService
-    component "Order Repository Adapter" as Repository
-    component "Payment Adapter" as PaymentAdapter
-    component "Inventory Adapter" as InventoryAdapter
-    component "Event Publisher Adapter" as EventPublisher
+package "WebAPI" {
+    component "CreateOrderController" as Controller
 }
 
-() "IOrderAPI\nProvided interface" as IOrderAPI
-() "IOrderQuery\nProvided interface" as IOrderQuery
-() "IOrderRepository\nRequired interface" as IOrderRepository
-() "IPaymentGateway\nRequired interface" as IPaymentGateway
-() "IInventoryService\nRequired interface" as IInventoryService
-() "IEventPublisher\nRequired interface" as IEventPublisher
+package "Application" {
+    component "CreateOrderUseCase" as UseCase
+    interface "OrderRepository" as OrderRepositoryPort
+    interface "InventoryAvailabilityPort" as InventoryPort
+    interface "IEventPublisher" as EventPublisherPort
+}
 
-Controller -- IOrderAPI : provides
-Controller -- IOrderQuery : provides
+package "Domain" {
+    component "Order" as Order
+    component "OrderItem" as OrderItem
+    component "Address" as Address
+    component "OrderStatus" as OrderStatus
+}
 
-Controller ..> PlaceOrder : invokes
-Controller ..> QueryOrder : invokes
-PlaceOrder ..> DomainService : uses
-QueryOrder ..> DomainService : uses
+package "Infrastructure - In Memory" {
+    component "InMemoryOrderRepository" as RepositoryAdapter
+    component "InMemoryInventoryAvailabilityAdapter" as InventoryAdapter
+    component "InMemoryEventBus" as EventBus
+    component "InMemoryProcessedEventStore" as ProcessedStore
 
-PlaceOrder ..> IOrderRepository : requires
-PlaceOrder ..> IPaymentGateway : requires
-PlaceOrder ..> IInventoryService : requires
-PlaceOrder ..> IEventPublisher : requires
+    component "StockReservationConsumer" as StockConsumer
+    component "OrderNotificationConsumer" as NotificationConsumer
+    component "PaymentAuditConsumer" as AuditConsumer
+}
 
-Repository -- IOrderRepository : implements
-PaymentAdapter -- IPaymentGateway : implements
-InventoryAdapter -- IInventoryService : implements
-EventPublisher -- IEventPublisher : implements
+Controller --> UseCase : execute(command)
+UseCase --> Order : creates aggregate
+Order *-- OrderItem
+Order *-- Address
+Order --> OrderStatus
 
-note right of IOrderAPI
-Provided interface (ball):
-the component exposes
-order operations to clients.
-end note
+UseCase ..> OrderRepositoryPort : requires
+UseCase ..> InventoryPort : requires
+UseCase ..> EventPublisherPort : requires
 
-note right of IOrderRepository
-Required interface (socket):
-the use case needs persistence
-through this abstraction.
-end note
+RepositoryAdapter ..|> OrderRepositoryPort
+InventoryAdapter ..|> InventoryPort
+EventBus ..|> EventPublisherPort
+
+EventBus --> StockConsumer : OrderCreatedEvent
+EventBus --> NotificationConsumer : OrderCreatedEvent
+EventBus --> AuditConsumer : PaymentProcessedEvent
+
+StockConsumer --> ProcessedStore
+NotificationConsumer --> ProcessedStore
+AuditConsumer --> ProcessedStore
 
 note bottom
-The application follows Clean Architecture:
-domain and use cases do not depend on infrastructure details.
-Adapters implement required ports.
+All adapters and event consumers are instantiated
+inside the same Spring application process.
+The repository, event bus and processed-event store
+are in-memory implementations, not external services.
 end note
 @enduml
