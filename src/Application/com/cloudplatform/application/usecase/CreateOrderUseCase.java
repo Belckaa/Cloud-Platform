@@ -1,28 +1,35 @@
-package com.cloudplatform.application.usecase;
+﻿package com.cloudplatform.application.usecase;
 
+import com.cloudplatform.application.port.IEventPublisher;
 import com.cloudplatform.application.port.InventoryAvailabilityPort;
 import com.cloudplatform.domain.model.Address;
 import com.cloudplatform.domain.model.Order;
 import com.cloudplatform.domain.model.OrderItem;
 import com.cloudplatform.domain.repository.OrderRepository;
+import com.cloudplatform.events.OrderCreatedEvent;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 public final class CreateOrderUseCase {
     private final OrderRepository orderRepository;
     private final InventoryAvailabilityPort inventoryPort;
+    private final IEventPublisher eventPublisher;
 
     public CreateOrderUseCase(
             OrderRepository orderRepository,
-            InventoryAvailabilityPort inventoryPort
+            InventoryAvailabilityPort inventoryPort,
+            IEventPublisher eventPublisher
     ) {
         this.orderRepository = orderRepository;
         this.inventoryPort = inventoryPort;
+        this.eventPublisher = eventPublisher;
     }
 
     public Order execute(CreateOrderCommand command) {
         if (command == null) {
-            throw new IllegalArgumentException("Команда створення замовлення обов'язкова.");
+            throw new IllegalArgumentException("Create order command is required.");
         }
 
         List<OrderItem> items = command.items() == null
@@ -44,17 +51,27 @@ public final class CreateOrderUseCase {
                 sourceAddress.postalCode()
         );
 
-        // Доменні правила перевіряються до звернення до зовнішніх портів.
         Order order = Order.create(command.customerId(), items, address);
 
         for (OrderItem item : order.getItems()) {
             if (!inventoryPort.isAvailable(item.productId(), item.quantity())) {
                 throw new InsufficientInventoryException(
-                        "Недостатньо товару на складі: " + item.productId()
+                        "Insufficient inventory for product: " + item.productId()
                 );
             }
         }
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+
+        eventPublisher.publish(new OrderCreatedEvent(
+                UUID.randomUUID(),
+                Instant.now(),
+                savedOrder.getId(),
+                savedOrder.getCustomerId(),
+                savedOrder.getTotalAmount(),
+                savedOrder.getItems().size()
+        ));
+
+        return savedOrder;
     }
 }

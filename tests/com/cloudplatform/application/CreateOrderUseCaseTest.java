@@ -1,10 +1,12 @@
-package com.cloudplatform.application;
+﻿package com.cloudplatform.application;
 
+import com.cloudplatform.application.port.IEventPublisher;
 import com.cloudplatform.application.port.InventoryAvailabilityPort;
 import com.cloudplatform.application.usecase.CreateOrderCommand;
 import com.cloudplatform.application.usecase.CreateOrderUseCase;
 import com.cloudplatform.domain.model.Order;
 import com.cloudplatform.domain.repository.OrderRepository;
+import com.cloudplatform.events.OrderCreatedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +30,9 @@ class CreateOrderUseCaseTest {
     @Mock
     private InventoryAvailabilityPort inventoryPort;
 
+    @Mock
+    private IEventPublisher eventPublisher;
+
     private CreateOrderUseCase useCase;
 
     private final UUID customerId = UUID.randomUUID();
@@ -35,7 +40,11 @@ class CreateOrderUseCaseTest {
 
     @BeforeEach
     void setUp() {
-        useCase = new CreateOrderUseCase(orderRepository, inventoryPort);
+        useCase = new CreateOrderUseCase(
+                orderRepository,
+                inventoryPort,
+                eventPublisher
+        );
     }
 
     private CreateOrderCommand validCommand() {
@@ -51,7 +60,7 @@ class CreateOrderUseCaseTest {
     }
 
     @Test
-    void execute_validCommand_checksInventoryAndSavesOrder() {
+    void execute_validCommand_checksInventorySavesOrderAndPublishesEvent() {
         when(inventoryPort.isAvailable(productId, 2)).thenReturn(true);
         when(orderRepository.save(any(Order.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -65,10 +74,11 @@ class CreateOrderUseCaseTest {
 
         verify(inventoryPort).isAvailable(productId, 2);
         verify(orderRepository).save(any(Order.class));
+        verify(eventPublisher).publish(any(OrderCreatedEvent.class));
     }
 
     @Test
-    void execute_emptyItems_rejectsCommandWithoutSaving() {
+    void execute_emptyItems_rejectsCommandWithoutSavingOrPublishing() {
         CreateOrderCommand invalidCommand = new CreateOrderCommand(
                 customerId,
                 List.of(),
@@ -84,10 +94,11 @@ class CreateOrderUseCaseTest {
 
         verifyNoInteractions(inventoryPort);
         verify(orderRepository, never()).save(any(Order.class));
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test
-    void execute_inventoryPortFailure_propagatesToCaller() {
+    void execute_inventoryPortFailure_propagatesWithoutSavingOrPublishing() {
         when(inventoryPort.isAvailable(productId, 2))
                 .thenThrow(new IllegalStateException("Inventory port unavailable"));
 
@@ -98,5 +109,6 @@ class CreateOrderUseCaseTest {
 
         assertEquals("Inventory port unavailable", exception.getMessage());
         verify(orderRepository, never()).save(any(Order.class));
+        verifyNoInteractions(eventPublisher);
     }
 }
