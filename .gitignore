@@ -30,3 +30,6 @@ vendor/
 *.tmp
 *.bak
 *.swp
+
+docs/diagrams/rendered/logs/
+tools/plantuml.jar

@@ -1,0 +1,58 @@
+@startuml 06_auth_search_sequence
+title UML Sequence Diagram - Authentication and Product Search
+autonumber
+
+actor Customer
+participant "Web Application" as Web
+participant "Backend API" as API
+participant "Keycloak" as Auth
+participant "Catalog Service" as Catalog
+database "Redis Cache" as Cache
+database "PostgreSQL" as DB
+
+Customer -> Web: Open marketplace
+Web -> API: GET /api/products
+API -> Catalog: searchProducts(query, filters)
+
+opt Search query is not empty
+    Catalog -> Catalog: Normalize query and filters
+end
+
+Catalog -> Cache: GET products:{query}
+alt Cache hit
+    Cache --> Catalog: Cached product list
+else Cache miss
+    Catalog -> DB: SELECT products with filters
+    DB --> Catalog: Product records
+    Catalog -> Cache: SET products:{query}, TTL
+end
+
+Catalog --> API: Product search results
+API --> Web: 200 OK (HTTPS/JSON)
+Web --> Customer: Display products
+
+Customer -> Web: Open protected account page
+Web -> API: GET /api/account (Bearer token)
+API -> Auth: Validate token
+
+alt Token is valid
+    Auth --> API: User identity and roles
+    API --> Web: 200 OK (account data)
+    Web --> Customer: Display account
+else Token expired or invalid
+    Auth --> API: Token validation failed
+    API --> Web: 401 Unauthorized
+    Web --> Customer: Redirect to login
+end
+
+loop While customer changes search filters
+    Customer -> Web: Change filter or sort order
+    Web -> API: GET /api/products with parameters
+    API -> Catalog: searchProducts(query, filters)
+    Catalog -> DB: Execute filtered search
+    DB --> Catalog: Matching products
+    Catalog --> API: Updated result page
+    API --> Web: 200 OK
+    Web --> Customer: Refresh product list
+end
+@enduml

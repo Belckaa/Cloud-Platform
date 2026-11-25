@@ -1,0 +1,23 @@
+@startuml 01_system_context
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title C4 Level 1 - System Context
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "Customer", "Browses products, manages cart and places orders")
+Person(admin, "Administrator", "Manages catalog, orders and marketplace operations")
+
+System(platform, "E-Commerce Cloud Platform", "High-load marketplace for product discovery, shopping, order processing and delivery coordination")
+
+System_Ext(keycloak, "Keycloak Identity Provider", "Authentication and identity management")
+System_Ext(payment, "External Payment Gateway", "Processes card and online payments")
+System_Ext(delivery, "External Delivery Provider", "Shipment creation and delivery tracking")
+
+Rel(customer, platform, "Browses products, manages cart, places orders", "HTTPS")
+Rel(admin, platform, "Manages catalog and orders", "HTTPS")
+Rel(platform, keycloak, "Authenticates users and validates tokens", "OIDC / OAuth 2.0 over HTTPS")
+Rel(platform, payment, "Creates and verifies payments", "HTTPS/JSON")
+Rel(platform, delivery, "Creates shipments and receives tracking updates", "HTTPS/JSON")
+
+SHOW_LEGEND()
+@enduml

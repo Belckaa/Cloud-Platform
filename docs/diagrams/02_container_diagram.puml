@@ -1,0 +1,37 @@
+@startuml 02_container_diagram
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 Level 2 - Container Diagram
+LAYOUT_WITH_LEGEND()
+
+Person(customer, "Customer", "Marketplace customer")
+Person(admin, "Administrator", "Marketplace administrator")
+
+System_Boundary(platform, "E-Commerce Cloud Platform") {
+    Container(web, "Web Application", "React, TypeScript", "Customer and administrator user interface")
+    Container(api, "Backend Application", "Java 21, Spring Boot", "Modular monolith implementing catalog, cart, order, payment and shipment use cases")
+    ContainerDb(db, "Main Database", "PostgreSQL", "Users references, products, carts, orders, payments and shipments")
+    ContainerDb(cache, "Distributed Cache", "Redis", "Product cache, sessions, rate-limit counters and temporary data")
+    ContainerQueue(broker, "Message Broker", "RabbitMQ", "Asynchronous domain events and background processing")
+    Container(notification, "Notification Service", "Java 21, Spring Boot", "Consumes notification events and processes customer notifications")
+}
+
+System_Ext(identity, "Keycloak", "Identity Provider")
+System_Ext(payment, "Payment Gateway", "External payment processing")
+System_Ext(delivery, "Delivery Provider", "External shipment and tracking")
+System_Ext(monitoring, "Prometheus / Grafana", "Metrics collection and visualization")
+
+Rel(customer, web, "Uses marketplace UI", "HTTPS")
+Rel(admin, web, "Uses administration UI", "HTTPS")
+Rel(web, api, "REST API requests", "HTTPS/JSON")
+Rel(api, identity, "OIDC authentication, token validation", "HTTPS/JSON")
+Rel(api, db, "Reads and writes persistent data", "TCP/IP - PostgreSQL protocol, port 5432")
+Rel(api, cache, "Cache operations", "TCP/IP - Redis protocol, port 6379")
+Rel(api, broker, "Publishes and consumes domain events", "AMQP 0-9-1, TCP/IP port 5672")
+Rel(broker, notification, "Delivers notification events", "AMQP 0-9-1, TCP/IP port 5672")
+Rel(api, payment, "Payment authorization and status queries", "HTTPS/JSON")
+Rel(api, delivery, "Shipment creation and tracking", "HTTPS/JSON")
+Rel(monitoring, api, "Scrapes application metrics", "HTTP, TCP/IP")
+
+SHOW_LEGEND()
+@enduml

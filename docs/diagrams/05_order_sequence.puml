@@ -1,0 +1,70 @@
+@startuml 05_order_sequence
+title UML Sequence Diagram - Order Placement
+autonumber
+
+actor Customer
+participant "Web Application" as Web
+participant "Backend API" as API
+participant "Keycloak" as Auth
+participant "Order Service" as Order
+participant "Inventory Adapter" as Inventory
+participant "Payment Adapter" as Payment
+database "PostgreSQL" as DB
+queue "RabbitMQ" as MQ
+
+Customer -> Web: Submit checkout
+Web -> API: POST /api/orders (HTTPS/JSON)
+API -> Auth: Validate access token (OIDC)
+
+alt Token is valid
+    Auth --> API: Authentication successful
+    API -> Order: placeOrder(customerId, cart)
+
+    loop For each order item
+        Order -> Inventory: reserve(productId, quantity)
+        Inventory --> Order: Reservation result
+    end
+
+    alt All items are available
+        Order -> DB: Save order with PENDING_PAYMENT
+        DB --> Order: Order persisted
+
+        Order -> Payment: authorizePayment(orderId, amount)
+        alt Payment authorized
+            Payment --> Order: Authorization successful
+            Order -> DB: Update order to CONFIRMED
+            DB --> Order: Update successful
+            Order -> MQ: Publish OrderConfirmed (AMQP)
+            Order --> API: Order confirmation
+            API --> Web: 201 Created
+            Web --> Customer: Show order confirmation
+        else Payment declined
+            Payment --> Order: Payment declined
+            Order -> DB: Mark payment FAILED
+            Order -> Inventory: Release reservations
+            Order --> API: Payment failure
+            API --> Web: 402 Payment Required
+            Web --> Customer: Show payment error
+        end
+    else At least one item unavailable
+        Order -> Inventory: Release successful reservations
+        Order --> API: Inventory conflict
+        API --> Web: 409 Conflict
+        Web --> Customer: Show unavailable item
+    end
+
+else Token is invalid
+    Auth --> API: Unauthorized
+    API --> Web: 401 Unauthorized
+    Web --> Customer: Request login
+end
+
+opt Customer requests order details after checkout
+    Web -> API: GET /api/orders/{id}
+    API -> Order: getOrder(orderId)
+    Order -> DB: Load order
+    DB --> Order: Order data
+    Order --> API: Order details
+    API --> Web: 200 OK
+end
+@enduml

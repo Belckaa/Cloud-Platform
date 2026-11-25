@@ -1,0 +1,59 @@
+@startuml 03_backend_components
+title UML Component Diagram - Backend Order Module
+skinparam componentStyle uml
+skinparam linetype ortho
+
+package "Backend Application - Order Module" {
+    component "Order REST Controller" as Controller
+    component "Place Order Use Case" as PlaceOrder
+    component "Order Query Use Case" as QueryOrder
+    component "Order Domain Service" as DomainService
+    component "Order Repository Adapter" as Repository
+    component "Payment Adapter" as PaymentAdapter
+    component "Inventory Adapter" as InventoryAdapter
+    component "Event Publisher Adapter" as EventPublisher
+}
+
+() "IOrderAPI\nProvided interface" as IOrderAPI
+() "IOrderQuery\nProvided interface" as IOrderQuery
+() "IOrderRepository\nRequired interface" as IOrderRepository
+() "IPaymentGateway\nRequired interface" as IPaymentGateway
+() "IInventoryService\nRequired interface" as IInventoryService
+() "IEventPublisher\nRequired interface" as IEventPublisher
+
+Controller -- IOrderAPI : provides
+Controller -- IOrderQuery : provides
+
+Controller ..> PlaceOrder : invokes
+Controller ..> QueryOrder : invokes
+PlaceOrder ..> DomainService : uses
+QueryOrder ..> DomainService : uses
+
+PlaceOrder ..> IOrderRepository : requires
+PlaceOrder ..> IPaymentGateway : requires
+PlaceOrder ..> IInventoryService : requires
+PlaceOrder ..> IEventPublisher : requires
+
+Repository -- IOrderRepository : implements
+PaymentAdapter -- IPaymentGateway : implements
+InventoryAdapter -- IInventoryService : implements
+EventPublisher -- IEventPublisher : implements
+
+note right of IOrderAPI
+Provided interface (ball):
+the component exposes
+order operations to clients.
+end note
+
+note right of IOrderRepository
+Required interface (socket):
+the use case needs persistence
+through this abstraction.
+end note
+
+note bottom
+The application follows Clean Architecture:
+domain and use cases do not depend on infrastructure details.
+Adapters implement required ports.
+end note
+@enduml

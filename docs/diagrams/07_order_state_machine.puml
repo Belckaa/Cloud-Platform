@@ -1,0 +1,41 @@
+@startuml 07_order_state_machine
+title UML State Machine Diagram - Order Lifecycle
+
+[*] --> Created : createOrder()
+
+Created --> PendingPayment : submit()
+PendingPayment --> Confirmed : paymentAuthorized()
+PendingPayment --> Cancelled : paymentDeclined()
+PendingPayment --> Cancelled : cancelByCustomer()
+
+Confirmed --> Processing : startFulfillment()
+Processing --> Shipped : shipmentCreated()
+Shipped --> Delivered : deliveryConfirmed()
+
+Created --> Cancelled : cancel()
+Confirmed --> Cancelled : cancelBeforeShipment()
+Processing --> Cancelled : cancelIfNotDispatched()
+
+Delivered --> [*]
+Cancelled --> [*]
+
+Confirmed --> Refunded : refundApproved()
+Delivered --> Refunded : returnAccepted()
+Refunded --> [*]
+
+note right of PendingPayment
+Payment authorization is required
+before order confirmation.
+end note
+
+note right of Shipped
+After shipment dispatch,
+cancellation is restricted.
+end note
+
+note bottom
+The state machine models the lifecycle of the Order aggregate.
+Transitions are triggered by business events and validated
+by domain rules.
+end note
+@enduml
