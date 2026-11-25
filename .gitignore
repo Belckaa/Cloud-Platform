@@ -1,4 +1,4 @@
-﻿# IDE
+# IDE
 .vscode/
 .idea/
 
@@ -33,3 +33,5 @@ vendor/
 
 docs/diagrams/rendered/logs/
 tools/plantuml.jar
+
+*.class
