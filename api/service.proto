@@ -1,0 +1,89 @@
+﻿syntax = "proto3";
+
+package ecommerce.integration.v1;
+
+option java_package = "com.cloudplatform.integration.v1";
+option java_multiple_files = true;
+option java_outer_classname = "OrderIntegrationProto";
+
+import "google/protobuf/timestamp.proto";
+
+// Внутрішній контракт інтеграції замовлень зі складською системою.
+service OrderIntegrationService {
+  // Unary: резервування товарів на складі.
+  rpc ReserveInventory(ReserveInventoryRequest) returns (OperationResponse);
+
+  // Unary: отримання поточного стану операції.
+  rpc GetOperation(GetOperationRequest) returns (OperationResponse);
+
+  // Server Streaming: спостереження за змінами стану операції.
+  rpc WatchOperationStatus(WatchOperationRequest) returns (stream OperationStatusEvent);
+
+  // Додатковий RPC для скасування операції.
+  rpc CancelOperation(CancelOperationRequest) returns (OperationResponse);
+}
+
+enum OperationStatus {
+  OPERATION_STATUS_UNSPECIFIED = 0;
+  OPERATION_STATUS_PENDING = 1;
+  OPERATION_STATUS_IN_PROGRESS = 2;
+  OPERATION_STATUS_COMPLETED = 3;
+  OPERATION_STATUS_FAILED = 4;
+  OPERATION_STATUS_CANCELLED = 5;
+}
+
+message ReserveInventoryRequest {
+  string order_id = 1;
+  string customer_id = 2;
+  repeated InventoryItem items = 3;
+  Address shipping_address = 4;
+  map<string, string> metadata = 5;
+  google.protobuf.Timestamp requested_at = 6;
+}
+
+message InventoryItem {
+  string product_id = 1;
+  int32 quantity = 2;
+  double unit_price = 3;
+  string currency = 4;
+}
+
+message Address {
+  string country = 1;
+  string city = 2;
+  string street = 3;
+  string building = 4;
+  string postal_code = 5;
+}
+
+message OperationResponse {
+  string operation_id = 1;
+  string order_id = 2;
+  OperationStatus status = 3;
+  string message = 4;
+  int64 estimated_completion_epoch_ms = 5;
+  double reserved_value = 6;
+  bool successful = 7;
+  google.protobuf.Timestamp updated_at = 8;
+}
+
+message GetOperationRequest {
+  string operation_id = 1;
+}
+
+message WatchOperationRequest {
+  string operation_id = 1;
+}
+
+message OperationStatusEvent {
+  string operation_id = 1;
+  OperationStatus status = 2;
+  string description = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+  map<string, string> metadata = 5;
+}
+
+message CancelOperationRequest {
+  string operation_id = 1;
+  string reason = 2;
+}
